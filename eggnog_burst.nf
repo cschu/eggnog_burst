@@ -11,7 +11,6 @@ params.output_dir = "eggnog_results"
 /* 
 input_proteins = "test.faa"
 prefix = "test"
-
 input_proteins = "prok-refdb-v11.0.0_specI-v2_representatives-v2UL_proteins-v1_head.faa"
 prefix = "prok-refdb-v11.0.0_specI-v2_representatives-v2UL_proteins-v1_head"
 
@@ -19,11 +18,9 @@ chunksize = 10
 params.output_dir = "eggnog_test_results"
 */
 
-
-
 Channel
 	.fromPath(file(input_proteins))
-	.splitFasta(by: chunksize, file: true) //prefix)
+	.splitFasta(by: chunksize, file: true)
 	.set { chunks_ch }
 
 process run_eggnog_mapper {
@@ -41,16 +38,25 @@ process run_eggnog_mapper {
     """
     emapper.py -i ${chunk} --data_dir ${params.eggnog_db} --output ${chunk} -m diamond --cpu 8
     """
-
 }
-result_run_eggnog_mapper.view { it }
 
-/*eggnog_chunks_sorted_ch
-	.toSortedList()
-	.set { eggnog_chunks_sorted_ch }*/
+process combine_eggnog_output {
+	publishDir "$params.output_dir"
 
-eggnog_chunks_ch
-	.collectFile(name: params.output_dir + "/" + prefix + ".emapper.annotations", newLine: true)
-//	.subscribe onNext: { print "collecting file $it" }, onComplete: "Done."
-//		println "Collecting eggnog files into: $it"
-//	}
+	input:
+	file chunk from eggnog_chunks_ch.collect()
+
+	output:
+	stdout result_combine_eggnog_output
+	file "${prefix}.emapper.annotations"
+
+	script:
+	"""
+	ls ${chunk} | awk -v prefix=$prefix -v OFS='\t' '{ idx=gensub(prefix, "", "g", \$1); split(idx, arr, "."); print arr[2],\$1}' | sort -k1,1g | cut -f 2 | xargs cat > ${prefix}.emapper.annotations.1
+	head -n3 ${prefix}.emapper.annotations.1 > ${prefix}.emapper.annotations
+	grep -v '#' ${prefix}.emapper.annotations.1 >> ${prefix}.emapper.annotations
+	rm ${prefix}.emapper.annotations.1
+	echo "done"
+	"""
+}
+result_combine_eggnog_output.view { it }
