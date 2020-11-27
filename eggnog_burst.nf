@@ -8,15 +8,22 @@ input_proteins = datapath + "/" + prefix + ".faa"
 chunksize = 10000
 params.output_dir = "eggnog_results"
 
-/*input_proteins = "test.faa"
+/* 
+input_proteins = "test.faa"
 prefix = "test"
+
+input_proteins = "prok-refdb-v11.0.0_specI-v2_representatives-v2UL_proteins-v1_head.faa"
+prefix = "prok-refdb-v11.0.0_specI-v2_representatives-v2UL_proteins-v1_head"
+
 chunksize = 10
-params.output_dir = "eggnog_test_results"*/
+params.output_dir = "eggnog_test_results"
+*/
+
 
 
 Channel
 	.fromPath(file(input_proteins))
-	.splitFasta(by: chunksize, file: prefix)
+	.splitFasta(by: chunksize, file: true) //prefix)
 	.set { chunks_ch }
 
 process run_eggnog_mapper {
