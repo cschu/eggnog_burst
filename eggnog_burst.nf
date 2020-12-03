@@ -75,6 +75,9 @@ prefix = prefix - ~/\/?([^\/]+\/)+/
 log.info "${prefix}"
 //exit 0
 
+gene_db = file(params.db)
+
+
 Channel
 	.fromPath(params.input_proteins, checkIfExists: true)
 	.splitFasta(by: params.chunksize, file: true)
@@ -100,15 +103,15 @@ process run_eggnog_mapper {
     """
 }
 
-process combine_eggnog_output {
+process merge_eggnog_output {
 	publishDir "$params.output_dir"
 
 	input:
 	file chunk from eggnog_chunks_ch.collect()
 
 	output:
-	stdout result_combine_eggnog_output
-	file "${prefix}.emapper.annotations"
+	stdout result_merge_eggnog_output
+	file "${prefix}.emapper.annotations" into eggnog_annotation_ch
 
 	script:
 	"""
@@ -116,7 +119,23 @@ process combine_eggnog_output {
 	head -n4 ${prefix}.emapper.annotations.1 > ${prefix}.emapper.annotations
 	grep -v '#' ${prefix}.emapper.annotations.1 >> ${prefix}.emapper.annotations
 	rm ${prefix}.emapper.annotations.1
+	"""
+}
+
+process combine_annotations {
+	publishDir "$params.output_dir"
+
+	input:
+	file eggnog_annotation from eggnog_annotation_ch
+
+	output:
+	stdout result_combine_annotations
+	file "${prefix}.gff"
+
+	script:
+	"""
+	python ${params.script_dir}/annotate_gff.py ${gene_db} ${eggnog_annotation}
 	echo "done"
 	"""
 }
-result_combine_eggnog_output.view { it }
+result_combine_annotations.view { it }
