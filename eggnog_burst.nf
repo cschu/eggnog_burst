@@ -31,19 +31,19 @@ def helpMessage() {
 
 	The typical command for running the pipeline is as follows:
 
-		nextflow run -C run.config eggnog_burst.nf --input_proteins <input_proteins> --db <path_to_gene_db> [--output_dir <output_dir>] [--chunksize <chunksize>]
+		nextflow run eggnog_burst.nf --input_proteins <input_proteins> --db <path_to_gene_db> -c run.config [--output_dir <output_dir>] [--chunksize <chunksize>]
 
 		Mandatory arguments:
 
-			--input_proteins		Path to fasta file with input protein sequences
-			--db					Path to sqlite database with gene information
+			--input_protein         Path to fasta file with input protein sequences
+			--db                    Path to sqlite database with gene information
 
 		Optional arguments:
 
-			--output_dir			Path to output directory (default: 'eggnog_burst_results')
-			--chunksize				Size of protein subsets for parallel eggNOG-mapping (default: 20000)
+			--output_dir            Path to output directory (default: 'eggnog_burst_results')
+			--chunksize             Size of protein subsets for parallel eggNOG-mapping (default: 20000)
 
-			--help					Display this help
+			--help                  Display this help
 
 		Configuration:
 
@@ -111,7 +111,7 @@ process merge_eggnog_output {
 
 	output:
 	stdout result_merge_eggnog_output
-	file "${prefix}.emapper.annotations" into eggnog_annotation_ch
+	file "${prefix}.emapper.annotations.raw.gz" into raw_eggnog_annotation_ch
 
 	script:
 	"""
@@ -119,7 +119,25 @@ process merge_eggnog_output {
 	head -n4 ${prefix}.emapper.annotations.1 > ${prefix}.emapper.annotations
 	grep -v '#' ${prefix}.emapper.annotations.1 >> ${prefix}.emapper.annotations
 	rm ${prefix}.emapper.annotations.1
+    gzip ${prefix}.emapper.annotations
 	"""
+}
+
+process remove_redundant_keggpw_terms {
+    publishDir "$params.output_dir"
+
+    input:
+    file raw_eggnog_annotation from raw_eggnog_annotation_ch
+
+    output:
+    file "${prefix}.emapper.annotations.gz" into eggnog_annotation_ch
+
+    script:
+    """
+	python ${params.script_dir}/remove_redundant_keggpw_terms.py -o "${prefix}.emapper.annotations.gz" ${eggnog_annotation}
+    """
+
+
 }
 
 process combine_annotations {
