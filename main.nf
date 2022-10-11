@@ -6,8 +6,6 @@ params.chunksize = 5
 
 
 process eggnog_mapper {
-	publishDir "${params.output_dir}", mode: params.publish_mode
-
 	input:
 	path(proteins)
 	// path(eggnog_db)
