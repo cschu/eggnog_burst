@@ -29,8 +29,8 @@ process emapper_search {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
     tag "${seed_orthologs}"
     cpus 16
-    memory {64.G * task.attempt}
-    time {8.h * task.attempt}
+    memory {"64.G" * task.attempt}
+    time {"8.h" * task.attempt}
 
     input:
     path proteins
@@ -42,7 +42,7 @@ process emapper_search {
     script:
     """
     mkdir -p emapper/ tmp/
-    emapper.py -i ${proteins} --data_dir ${db} --output emapper/${proteins} -m diamond --cpu ${task.cpus} --temp_dir tmp/ --no_annot
+    emapper.py -i ${proteins} --data_dir ${db} --output emapper/${proteins} -m diamond --cpu ${task.cpus} --temp_dir tmp/ --no_annot --pfam_realign realign
     """
 
 }
@@ -51,8 +51,8 @@ process emapper_annotation {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
     tag "${proteins}"
     cpus 8
-    memory {64.G * task.attempt}
-    time {8.h * task.attempt}
+    memory {"64.G" * task.attempt}
+    time {"8.h" * task.attempt}
 
     input:
     path seed_orthologs
