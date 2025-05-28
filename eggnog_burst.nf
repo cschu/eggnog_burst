@@ -25,6 +25,51 @@ process run_emapper {
 
 }
 
+process emapper_search {
+    container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
+    tag "${seed_orthologs}"
+    cpu 16
+    memory {64.G * task.attempt}
+    time {8.h * task.attempt}
+
+    input:
+    path proteins
+    path db
+
+    output:
+    path "emapper/*.emapper.seed_orthologs", emit: seed_orthologs
+
+    script:
+    """
+    mkdir -p emapper/ tmp/
+    emapper.py -i ${proteins} --data_dir ${db} --output emapper/${proteins} -m diamond --cpu ${task.cpus} --temp_dir tmp/ --no_annot
+    """
+
+}
+
+process emapper_annotation {
+    container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
+    tag "${proteins}"
+    cpu 8
+    memory {64.G * task.attempt}
+    time {8.h * task.attempt}
+
+    input:
+    path seed_orthologs
+    path db
+
+    output:
+    path "emapper/*.emapper.annotations", emit: annotations
+
+    script:
+    """
+    mkdir -p emapper/ tmp/
+    emapper.py --annotate_hits_table ${seed_orthologs} --data_dir ${db} --output emapper/\$(basename ${seed_orthologues} .emapper.seed_orthologs) -m no_search --dbmem
+    """
+
+}
+
+
 
 process merge_emapper_output {
     publishDir "${params.output_dir}", mode: "copy"
@@ -52,7 +97,10 @@ workflow {
     proteins_ch = Channel.fromPath(params.input_proteins, checkIfExists: true)
         .splitFasta(by: params.chunksize, file: true)
 
-    run_emapper(proteins_ch, params.eggnog_db)
+    // run_emapper(proteins_ch, params.eggnog_db)
+    emapper_search(proteins_ch, params.eggnog_db)
+
+    emapper_annotation(emapper_search.out.seed_orthologs, params.eggnog_db)
 
     merge_emapper_output(run_emapper.out.annotations.collect())
 
