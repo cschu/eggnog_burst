@@ -27,7 +27,7 @@ process run_emapper {
 
 process emapper_search {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
-    tag "${seed_orthologs}"
+    tag "${proteins}"
     cpus 16
     memory {"64.G" * task.attempt}
     time {"8.h" * task.attempt}
@@ -49,7 +49,7 @@ process emapper_search {
 
 process emapper_annotation {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
-    tag "${proteins}"
+    tag "${seed_orthologs}"
     cpus 8
     memory {"64.G" * task.attempt}
     time {"8.h" * task.attempt}
