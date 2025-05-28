@@ -102,6 +102,7 @@ workflow {
 
     emapper_annotation(emapper_search.out.seed_orthologs, params.eggnog_db)
 
-    merge_emapper_output(run_emapper.out.annotations.collect())
+    //merge_emapper_output(run_emapper.out.annotations.collect())
+    merge_emapper_output(emapper_annotation.out.annotations.collect())
 
 }
