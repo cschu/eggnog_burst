@@ -64,7 +64,7 @@ process emapper_annotation {
     script:
     """
     mkdir -p emapper/ tmp/
-    emapper.py --annotate_hits_table ${seed_orthologs} --data_dir ${db} --output emapper/\$(basename ${seed_orthologues} .emapper.seed_orthologs) -m no_search --dbmem
+    emapper.py --annotate_hits_table ${seed_orthologs} --data_dir ${db} --output emapper/\$(basename ${seed_orthologs} .emapper.seed_orthologs) -m no_search --dbmem
     """
 
 }
