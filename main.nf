@@ -29,8 +29,8 @@ process emapper_search {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
     tag "${proteins}"
     cpus 16
-    memory {"64.G" * task.attempt}
-    time {"8.h" * task.attempt}
+    memory {64.GB * task.attempt}
+    time {8.h * task.attempt}
 
     input:
     path proteins
@@ -51,8 +51,8 @@ process emapper_annotation {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
     tag "${seed_orthologs}"
     cpus 8
-    memory {"64.G" * task.attempt}
-    time {"8.h" * task.attempt}
+    memory {64.GB * task.attempt}
+    time {8.h * task.attempt}
 
     input:
     path seed_orthologs
@@ -73,6 +73,7 @@ process emapper_annotation {
 
 process merge_emapper_output {
     publishDir "${params.output_dir}", mode: "copy"
+    executor "local"
 
     input:
     path annotations
