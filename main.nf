@@ -101,7 +101,7 @@ workflow {
     // run_emapper(proteins_ch, params.eggnog_db)
     emapper_search(proteins_ch, params.eggnog_db)
 
-    emapper_annotation(emapper_search.out.seed_orthologs, params.eggnog_db)
+    emapper_annotation(emapper_search.out.seed_orthologs, params.eggnog_annotation_db)
 
     //merge_emapper_output(run_emapper.out.annotations.collect())
     merge_emapper_output(emapper_annotation.out.annotations.collect())
