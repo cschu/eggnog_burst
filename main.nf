@@ -62,6 +62,9 @@ process emapper_annotation {
     path "emapper/*.emapper.annotations", emit: annotations
 
     script:
+
+    def db_in_mem = (params.eggnog_annotation_db_in_memory) ? "--dbmem" : ""
+
     """
     mkdir -p emapper/ tmp/
 
@@ -69,7 +72,7 @@ process emapper_annotation {
     
     cat ${seed_orthologs} | grep -v "^#" >> seed_orthologs.txt
 
-    emapper.py --annotate_hits_table seed_orthologs.txt --data_dir ${db} --output emapper/batch_${batch_id}.emapper.seed_orthologs -m no_search --dbmem
+    emapper.py --annotate_hits_table seed_orthologs.txt --data_dir ${db} --output emapper/batch_${batch_id}.emapper.seed_orthologs -m no_search ${db_in_mem}
     """
 
 }
