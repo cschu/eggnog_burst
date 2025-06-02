@@ -65,7 +65,7 @@ process emapper_annotation {
     """
     mkdir -p emapper/ tmp/
 
-    grep -m 1 qseqid ${seed_orthologs[0]} > seed_orthologs.txt
+    grep -m 1 "^#qseqid" ${seed_orthologs[0]} > seed_orthologs.txt
     
     cat ${seed_orthologs} | grep -v "^#" >> seed_orthologs.txt
 
