@@ -49,13 +49,13 @@ process emapper_search {
 
 process emapper_annotation {
     container "quay.io/biocontainers/eggnog-mapper:2.1.12--pyhdfd78af_2"
-    tag "${seed_orthologs}"
+    tag "seed_orthologs_${batch_id}"
     cpus 8
     memory {64.GB * task.attempt}
     time {8.h * task.attempt}
 
     input:
-    path seed_orthologs
+    tuple val(batch_id), path(seed_orthologs)
     path db
 
     output:
@@ -64,7 +64,12 @@ process emapper_annotation {
     script:
     """
     mkdir -p emapper/ tmp/
-    emapper.py --annotate_hits_table ${seed_orthologs} --data_dir ${db} --output emapper/\$(basename ${seed_orthologs} .emapper.seed_orthologs) -m no_search --dbmem
+
+    grep -m 1 qseqid ${seed_orthologs[0]} > seed_orthologs.txt
+    
+    cat ${seed_orthologs} | grep -v "^#" >> seed_orthologs.txt
+
+    emapper.py --annotate_hits_table seed_orthologs.txt --data_dir ${db} --output emapper/batch_${batch_id}.emapper.seed_orthologs -m no_search --dbmem
     """
 
 }
@@ -90,6 +95,7 @@ process merge_emapper_output {
     """
 }
 
+params.emapper_annotation_buffer_size = 100
 
 
 
@@ -101,7 +107,12 @@ workflow {
     // run_emapper(proteins_ch, params.eggnog_db)
     emapper_search(proteins_ch, params.eggnog_db)
 
-    emapper_annotation(emapper_search.out.seed_orthologs, params.eggnog_annotation_db)
+    def batch_ctr = 0
+    emapper_annotation_ch = emapper_search.out.seed_orthologs
+        .buffer(size: params.emapper_annotation_buffer_size, remainder: true)
+        .map { files -> [batch_ctr++, files] }
+
+    emapper_annotation(emapper_annotation_ch, params.eggnog_annotation_db)
 
     //merge_emapper_output(run_emapper.out.annotations.collect())
     merge_emapper_output(emapper_annotation.out.annotations.collect())
