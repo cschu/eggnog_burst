@@ -94,7 +94,7 @@ process merge_emapper_output {
     mkdir -p emapper_merged/
 
     head -n 4 ${annotations[0]} | gzip -c - > emapper_merged/emapper_annotations.tsv.gz
-    grep -v '#' ${annotations} | cut -f 2- -d : | gzip -c - > emapper_merged/emapper_annotations.tsv.gz
+    grep -v '^#' ${annotations} | cut -f 2- -d : | gzip -c - >> emapper_merged/emapper_annotations.tsv.gz
     """
 }
 
